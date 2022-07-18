@@ -16,7 +16,7 @@ function plugin(parser) {
       let elts = [], first = true
       while (!this.eat(close)) {
         if (first) first = false
-        else this.expect(tt.comma, tt.colon)
+        else this.expect(tt.comma)
         if (allowEmpty && this.type === tt.comma) {
           elts.push(null)
         } else if (allowTrailingComma && this.afterTrailingComma(close)) {
@@ -28,8 +28,6 @@ function plugin(parser) {
           if (this.type === tt.comma) this.raise(this.start, "Comma is not permitted after the rest element")
           this.expect(close)
           break
-        } else  if (this.curContext() === tc_type) {
-          this.parseType();
         } else {
           let elem = this.parseMaybeDefault(this.start, this.startLoc)
           this.parseBindingListItem(elem)
@@ -39,35 +37,21 @@ function plugin(parser) {
       return elts
     }
 
-    updateContext(prevType) {
-      const context = this.curContext() 
-      if (this.type === tt.colon) {
-        this.context.push(tc_type);
-      } else if (context === tc_type && this.type === tt.comma) {
-        this.context.pop()
-      } else {
-        super.updateContext(prevType)
+    parseMaybeDefault = function(startPos, startLoc, left) {
+      left = left || this.parseBindingAtom();
+      if (this.eat(tt.colon)) {
+        this.checkType()
+        this.next()
       }
+      if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) { return left }
+      var node = this.startNodeAt(startPos, startLoc);
+      node.left = left;
+      node.right = this.parseMaybeAssign();
+      return this.finishNode(node, "AssignmentPattern")
     }
 
-    parseType() {
-      const node = this.startNode();
-      node.name = this.value
-      this.next();
-      this.finishNode(node, "Type");
-      return node;
-    }
-
-    checkLValPattern(expr, bindingType, checkClashes) {
-      if (expr.type === 'Type') {
-        // TODO: rules for type
-      } else {
-        super.checkLValPattern(expr, bindingType, checkClashes);
-      }
-    }
-
-    expect(...types) {
-      types.some(type => this.eat(type)) || this.unexpected();
+    checkType() {
+      // check syntax rules for function parameter type
     }
   }
 }
