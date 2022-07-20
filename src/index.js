@@ -9,5 +9,5 @@ const ast = parser.parse(sourceCode, {
   ecmaVersion: 'latest',
   sourceType: "module",
 });
-
+// console.log(JSON.stringify(ast, null));
 console.log(generate(ast))
