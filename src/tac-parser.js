@@ -1,4 +1,4 @@
-import { Parser, TokContext } from "acorn";
+import { Parser, TokContext, isIdentifierStart } from "acorn";
 
 export default function (options = {}) {
   return plugin;
@@ -13,10 +13,26 @@ function plugin(parser) {
     a_stat: new TokContext("<", false),
     s_stat: new TokContext("[", false),
   })
+  const keywordsTypes = parser.acorn.keywordTypes
 
   // TODO: maybe we can duplicate parseIndent instead of both parseMaybeDefault and parseVar 
   return class extends Parser {
-    parseMaybeDefault = function (startPos, startLoc, left) {
+    readWord() {
+      let word = this.readWord1();
+
+      if (word === 'type' && this.skipSpace(), isIdentifierStart(this.fullCharCodeAtPos())) {
+        this.skipTypeAlias()
+        return
+      }
+
+      let type = tt.name
+      if (this.keywords.test(word)) {
+        type = keywordsTypes[word]
+      }
+      return this.finishToken(type, word)
+   }
+
+    parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom();
       if (this.eat(tt.colon)) {
         this.skipParameterType()
@@ -52,6 +68,41 @@ function plugin(parser) {
       return node
     }
 
+    skipTypeAlias() {
+      this.pos = this.input.indexOf("{", this.pos) + 1
+      let code = this.input.charCodeAt(this.pos)
+      const contextsCount = this.context.length
+      this.context.push(contexts.b_stat)
+      while (contextsCount < this.context.length && this.pos < this.input.length) {
+        switch (code) {
+          case 60: // <
+            this.context.push(contexts.a_stat)
+            break;
+          case 40: // (
+            this.context.push(contexts.p_stat)
+            break;
+          case 91: // [
+            this.context.push(contexts.s_stat)
+            break;
+          case 123: // {
+            this. context.push(contexts.b_stat)
+            break;
+          case 62: // >
+          case 41: // )
+          case 93: // ]
+          case 125: // }
+            this.context.pop()
+            break;
+        }
+        code = this.input.charCodeAt(++this.pos);
+      }
+
+      if (code === 59) { // ;
+        this.pos++
+      }
+      this.next()
+    }
+
     skipParameterType() {
       let code = this.input.charCodeAt(this.pos)
       while (((!this.isComma(code) && !this.isEqual(code) && !this.isCloseParenthesis(code)) || [contexts.a_stat, contexts.p_stat, contexts.s_stat].includes(this.curContext())) && this.pos < this.input.length) {
@@ -74,7 +125,7 @@ function plugin(parser) {
         code = this.input.charCodeAt(++this.pos);
       }
 
-      if (this.curContext() === contexts.a_stat) {
+      if ([contexts.a_stat, contexts.p_stat, contexts.s_stat].includes(this.curContext())) {
         this.unexpected()
       }
 
@@ -82,15 +133,15 @@ function plugin(parser) {
     }
 
     isComma(code) {
-      return code === 44;
+      return code === 44; // ,
     }
     
     isEqual(code) {
-      return code === 61;
+      return code === 61; // =
     }
 
     isCloseParenthesis(code) {
-      return code === 41
+      return code === 41 // )
     }
   }
 }
