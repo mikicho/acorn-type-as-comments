@@ -44,6 +44,41 @@ function plugin(parser) {
       return this.finishNode(node, "AssignmentPattern")
     }
 
+    skipParameterType() {
+      let code = this.input.charCodeAt(this.pos)
+      const contextsCount = this.context.length
+      //        )   ,   ;   =   }
+      while ((![41, 44, 59, 61, 125].includes(code) || contextsCount < this.context.length) && this.pos < this.input.length) {
+        switch (code) {
+          case 60: // <
+            this.context.push(contexts.a_stat)
+            break;
+          case 40: // (
+            this.context.push(contexts.p_stat)
+            break;
+          case 91: // [
+            this.context.push(contexts.s_stat)
+            break;
+          case 123: // {
+            this.context.push(contexts.b_stat)
+            break;
+          case 62: // >
+          case 41: // )
+          case 93: // ]
+          case 125: // }
+            this.context.pop()
+            break;
+        }
+        code = this.input.charCodeAt(++this.pos);
+      }
+
+      if ([contexts.a_stat, contexts.p_stat, contexts.s_stat].includes(this.curContext())) {
+        this.unexpected()
+      }
+
+      this.next()
+    }
+
     parseVar(node, isFor, kind) {
       node.declarations = []
       node.kind = kind
@@ -103,45 +138,37 @@ function plugin(parser) {
       this.next()
     }
 
-    skipParameterType() {
-      let code = this.input.charCodeAt(this.pos)
-      while (((!this.isComma(code) && !this.isEqual(code) && !this.isCloseParenthesis(code)) || [contexts.a_stat, contexts.p_stat, contexts.s_stat].includes(this.curContext())) && this.pos < this.input.length) {
+    parseClassId(node, isStatement) {
+      super.parseClassId(node, isStatement)
+
+      if (this.eat(tt.relational)) {
+        this.parseClassGeneric()
+      }
+
+    }
+
+    parseClassGeneric() {
+      let code = this.value[0]
+      const contextsCount = this.context.length
+      this.context.push(contexts.a_stat)
+      while (contextsCount < this.context.length && this.pos < this.input.length) {
         switch (code) {
           case 60: // <
             this.context.push(contexts.a_stat)
-            break;
-          case 40: // (
-            this.context.push(contexts.p_stat)
-            break;
-          case 91: // [
-            this.context.push(contexts.s_stat)
-            break;
           case 62: // >
-          case 41: // )
-          case 93: // ]
             this.context.pop()
             break;
         }
         code = this.input.charCodeAt(++this.pos);
       }
-
-      if ([contexts.a_stat, contexts.p_stat, contexts.s_stat].includes(this.curContext())) {
-        this.unexpected()
-      }
-
       this.next()
     }
 
-    isComma(code) {
-      return code === 44; // ,
-    }
-    
-    isEqual(code) {
-      return code === 61; // =
-    }
-
-    isCloseParenthesis(code) {
-      return code === 41 // )
+    parseClassField(field) {
+      if (this.eat(tt.colon)) {
+        this.skipParameterType()
+      }
+      super.parseClassField(field)
     }
   }
 }
