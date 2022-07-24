@@ -20,7 +20,7 @@ function plugin(parser) {
     readWord() {
       let word = this.readWord1();
 
-      if (word === 'type' && this.skipSpace(), isIdentifierStart(this.fullCharCodeAtPos())) {
+      if (['type', 'interface'].includes(word) && this.skipSpace(), isIdentifierStart(this.fullCharCodeAtPos())) {
         this.skipTypeAlias()
         return
       }
