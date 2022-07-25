@@ -27,6 +27,14 @@ function plugin(parser) {
           this.skipTypeAlias()
           return
         }
+      } else if (word === 'import') {
+        this.skipSpace()
+        if (this.peekWord() === 'type') {
+          // TODO: parse the statement instead of ignore it completely 
+          this.skipLineComment(0)
+          this.next()
+          return
+        }
       } else if (['type', 'interface'].includes(word) && this.skipSpace(), isIdentifierStart(this.fullCharCodeAtPos())) {
         this.skipTypeAlias()
         return
