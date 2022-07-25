@@ -18,9 +18,16 @@ function plugin(parser) {
   // TODO: maybe we can duplicate parseIndent instead of both parseMaybeDefault and parseVar 
   return class extends Parser {
     readWord() {
-      let word = this.readWord1();
+      const word = this.readWord1();
 
-      if (['type', 'interface'].includes(word) && this.skipSpace(), isIdentifierStart(this.fullCharCodeAtPos())) {
+      if (word === 'export') {
+        this.skipSpace()
+        const nextWord = this.peekWord();
+        if (['type', 'interface'].includes(nextWord)) {
+          this.skipTypeAlias()
+          return
+        }
+      } else if (['type', 'interface'].includes(word) && this.skipSpace(), isIdentifierStart(this.fullCharCodeAtPos())) {
         this.skipTypeAlias()
         return
       }
@@ -169,6 +176,10 @@ function plugin(parser) {
         this.skipParameterType()
       }
       super.parseClassField(field)
+    }
+
+    peekWord() {
+      return this.input.slice(this.pos, this.input.indexOf(" ", this.pos))
     }
   }
 }

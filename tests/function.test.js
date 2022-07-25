@@ -8,7 +8,7 @@ const options = {
   sourceType: "module",
 }
 
-describe('Function argument type', () => {
+describe('Function', () => {
   it.each([
     ['function a(arg) {}', 'function a(arg) {\n}'],
     ['function a(arg = 5) {}', 'function a(arg = 5) {\n}'],
@@ -19,6 +19,7 @@ describe('Function argument type', () => {
     ['function a(arg: Pick(A, "a") = 5) {}', 'function a(arg = 5) {\n}'],
     ['function a(arg: Pick[A, "a"] = 5) {}', 'function a(arg = 5) {\n}'],
     ['function a(arg: string = 5, arg1) {}', 'function a(arg = 5, arg1) {\n}'],
+    ['export function a() {}', 'export function a() {\n}'],
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)
     expect(generate(ast)).toBe(expected)
