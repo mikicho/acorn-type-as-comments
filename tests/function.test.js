@@ -18,7 +18,8 @@ describe('Function', () => {
     ['function a(arg: Pick<A, "a"> = 5) {}', 'function a(arg = 5) {\n}'],
     ['function a(arg: Pick(A, "a") = 5) {}', 'function a(arg = 5) {\n}'],
     ['function a(arg: Pick[A, "a"] = 5) {}', 'function a(arg = 5) {\n}'],
-    ['function a(arg: string = 5, arg1) {}', 'function a(arg = 5, arg1) {\n}'],
+    ['function a(arg: string = 5, arg1): Pick<{a: string}, "a"> {}', 'function a(arg = 5, arg1) {\n}'],
+    ['function a(arg: string = 5, arg1): {a: string} {}', 'function a(arg = 5, arg1) {\n}'],
     ['export function a() {}', 'export function a() {\n}'],
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)

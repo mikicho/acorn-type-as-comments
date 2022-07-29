@@ -49,7 +49,7 @@ function plugin(parser) {
 
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom();
-      if (this.eat(tt.colon)) {
+      if (this.type === tt.colon) {
         this.skipParameterType()
       }
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) { return left }
@@ -62,8 +62,9 @@ function plugin(parser) {
     skipParameterType() {
       let code = this.input.charCodeAt(this.pos)
       const contextsCount = this.context.length
-      //        )   ,   ;   =   }
-      while ((![41, 44, 59, 61, 125].includes(code) || contextsCount < this.context.length) && this.pos < this.input.length) {
+
+      //              )   ,   ;   =   >   }
+      loop: while ((![41, 44, 59, 61, 62, 125].includes(code) || contextsCount < this.context.length) && this.pos < this.input.length) {
         switch (code) {
           case 60: // <
             this.context.push(contexts.a_stat)
@@ -82,12 +83,17 @@ function plugin(parser) {
           case 93: // ]
           case 125: // }
             this.context.pop()
+
+            if (contextsCount === this.context.length) {
+              this.pos++
+              break loop
+            }
             break;
         }
-        code = this.input.charCodeAt(++this.pos);
+        code = this.input.charCodeAt(++this.pos)
       }
 
-      if ([contexts.a_stat, contexts.p_stat, contexts.s_stat].includes(this.curContext())) {
+      if (contextsCount > this.context.length) {
         this.unexpected()
       }
 
@@ -100,7 +106,7 @@ function plugin(parser) {
       for (; ;) {
         let decl = this.startNode()
         this.parseVarId(decl, kind)
-        if (this.eat(tt.colon)) {
+        if (this.type === tt.colon) {
           this.skipParameterType()
         }
         if (this.eat(tt.eq)) {
@@ -180,10 +186,18 @@ function plugin(parser) {
     }
 
     parseClassField(field) {
-      if (this.eat(tt.colon)) {
+      if (this.type === tt.colon) {
         this.skipParameterType()
       }
       super.parseClassField(field)
+    }
+
+    parseFunctionParams(node) {
+      super.parseFunctionParams(node)
+
+      if(this.type === tt.colon) {
+          this.skipParameterType()
+      }
     }
 
     peekWord() {
