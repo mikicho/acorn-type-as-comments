@@ -49,7 +49,7 @@ function plugin(parser) {
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom()
       if (this.type === tt.colon) {
-        this.skipType([ascii(')'), ascii(','), ascii(';'), ascii('='), ascii('>'), ascii('}')])
+        this.skipType([ascii(')'), ascii(','), ascii('=')])
       }
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) {
         return left
@@ -106,7 +106,7 @@ function plugin(parser) {
         let decl = this.startNode()
         this.parseVarId(decl, kind)
         if (this.type === tt.colon) {
-          this.skipType([ascii(')'), ascii(','), ascii('='), ascii('>'), ascii('}')])
+          this.skipType([ascii(')'), ascii(','), ascii('=')])
         }
         if (this.eat(tt.eq)) {
           decl.init = this.parseMaybeAssign(isFor)
@@ -157,7 +157,7 @@ function plugin(parser) {
 
     parseClassField(field) {
       if (this.type === tt.colon) {
-        this.skipType([ascii(')'), ascii(','), ascii(';'), ascii('='), ascii('>'), ascii('}')])
+        this.skipType([ascii(','), ascii(';'), ascii('='), ascii('}')])
       }
       super.parseClassField(field)
     }
