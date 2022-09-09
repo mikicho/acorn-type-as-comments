@@ -23,6 +23,7 @@ function plugin(parser) {
       if (word === 'export') {
         this.skipSpace()
         const nextWord = this.peekWord()
+
         if (['type', 'interface'].includes(nextWord)) {
           this.skipType([])
           return
@@ -40,10 +41,8 @@ function plugin(parser) {
         return
       }
 
-      let type = tt.name
-      if (this.keywords.test(word)) {
-        type = keywordsTypes[word]
-      }
+      const type = this.keywords.test(word) ? keywordsTypes[word] : tt.name
+
       return this.finishToken(type, word)
     }
 
