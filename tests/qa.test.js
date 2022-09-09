@@ -1,11 +1,11 @@
-import * as acorn from "acorn";
+import * as acorn from 'acorn'
 import {toJs} from 'estree-util-to-js'
-import tacParser from "../src/tac-parser.js";
+import tacParser from '../src/tac-parser.js'
 
 const parser = acorn.Parser.extend(tacParser())
 const options = {
   ecmaVersion: 'latest',
-  sourceType: "module",
+  sourceType: 'module',
 }
 
 describe.skip('qa', () => {
@@ -33,5 +33,5 @@ function optional(x?: string) {}
     `.trim()
     const ast = parser.parse(source, options)
     expect(toJs(ast).value).toBe('')
-  });
-});
+  })
+})

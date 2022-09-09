@@ -1,11 +1,11 @@
-import * as acorn from "acorn";
-import { generate } from "escodegen";
-import tacParser from "../src/tac-parser.js";
+import * as acorn from 'acorn'
+import {generate} from 'escodegen'
+import tacParser from '../src/tac-parser.js'
 
 const parser = acorn.Parser.extend(tacParser())
 const options = {
   ecmaVersion: 'latest',
-  sourceType: "module",
+  sourceType: 'module',
 }
 
 describe('Variable type', () => {
@@ -21,5 +21,5 @@ describe('Variable type', () => {
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)
     expect(generate(ast)).toBe(expected)
-  });
-});
+  })
+})
