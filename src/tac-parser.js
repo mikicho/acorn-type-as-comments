@@ -60,25 +60,31 @@ function plugin(parser) {
       return this.finishNode(node, 'AssignmentPattern')
     }
 
-    skipType(stopCharacters) {
+    skipType(stopCharacters, {ignoreFirstBraces = false} = {}) {
       const finalStopCharacters = [...stopCharacters, ';', '\n']
       const contextsCount = this.context.length
 
-      for (
+      const foundStopCharacter = (char) =>
+        finalStopCharacters.includes(char) && (!ignoreFirstBraces || char === '}')
+
+      loop: for (
         let char = this.input[this.pos];
-        (!finalStopCharacters.includes(char) || contextsCount < this.context.length) &&
+        (!foundStopCharacter(char) || contextsCount < this.context.length) &&
         this.pos < this.input.length;
         char = this.input[++this.pos]
       ) {
         switch (char) {
           case '<':
             this.context.push(contexts.a_stat)
+            ignoreFirstBraces = false
             break
           case '(':
             this.context.push(contexts.p_stat)
+            ignoreFirstBraces = false
             break
           case '[':
             this.context.push(contexts.s_stat)
+            ignoreFirstBraces = false
             break
           case '{':
             this.context.push(contexts.b_stat)
@@ -86,9 +92,14 @@ function plugin(parser) {
           case '>':
           case ')':
           case ']':
-          case '}':
             this.context.pop()
             break
+          case '}':
+            this.context.pop()
+            if (ignoreFirstBraces && contextsCount === this.context.length) {
+              this.pos++
+              break loop
+            }
         }
       }
 
@@ -166,7 +177,7 @@ function plugin(parser) {
       super.parseFunctionParams(node)
 
       if (this.type === tt.colon) {
-        this.skipType(['{'])
+        this.skipType(['{'], {ignoreFirstBraces: true})
       }
     }
 
