@@ -2,10 +2,10 @@ import { Parser, TokContext, isIdentifierStart } from "acorn";
 
 export default function (options = {}) {
   return plugin;
-} 
+}
 
 /**
- * @param {Parser} parser 
+ * @param {Parser} parser
  */
 function plugin(parser) {
   const tt = parser.acorn.tokTypes;
@@ -15,7 +15,7 @@ function plugin(parser) {
   })
   const keywordsTypes = parser.acorn.keywordTypes
 
-  // TODO: maybe we can duplicate parseIndent instead of both parseMaybeDefault and parseVar 
+  // TODO: maybe we can duplicate parseIndent instead of both parseMaybeDefault and parseVar
   return class extends Parser {
     readWord() {
       const word = this.readWord1();
@@ -30,7 +30,7 @@ function plugin(parser) {
       } else if (word === 'import') {
         this.skipSpace()
         if (this.peekWord() === 'type') {
-          // TODO: parse the statement instead of ignore it completely 
+          // TODO: parse the statement instead of ignore it completely
           this.skipLineComment(0)
           this.next()
           return
@@ -63,25 +63,24 @@ function plugin(parser) {
       let code = this.input.charCodeAt(this.pos)
       const contextsCount = this.context.length
 
-      //              )   ,   ;   =   >   }
-      loop: while ((![41, 44, 59, 61, 62, 125].includes(code) || contextsCount < this.context.length) && this.pos < this.input.length) {
+      loop: while ((![ascii(')'), ascii(','), ascii(';'), ascii('='), ascii('>'), ascii('}')].includes(code) || contextsCount < this.context.length) && this.pos < this.input.length) {
         switch (code) {
-          case 60: // <
+          case ascii('<'):
             this.context.push(contexts.a_stat)
             break;
-          case 40: // (
+          case ascii('('):
             this.context.push(contexts.p_stat)
             break;
-          case 91: // [
+          case ascii('['):
             this.context.push(contexts.s_stat)
             break;
-          case 123: // {
+          case ascii('{'):
             this.context.push(contexts.b_stat)
             break;
-          case 62: // >
-          case 41: // )
-          case 93: // ]
-          case 125: // }
+          case ascii('>'):
+          case ascii(')'):
+          case ascii(']'):
+          case ascii('}'):
             this.context.pop()
 
             if (contextsCount === this.context.length) {
@@ -131,29 +130,29 @@ function plugin(parser) {
       this.context.push(contexts.b_stat)
       while (contextsCount < this.context.length && this.pos < this.input.length) {
         switch (code) {
-          case 60: // <
+          case ascii('<'):
             this.context.push(contexts.a_stat)
             break;
-          case 40: // (
+          case ascii('('):
             this.context.push(contexts.p_stat)
             break;
-          case 91: // [
+          case ascii('['):
             this.context.push(contexts.s_stat)
             break;
-          case 123: // {
+          case ascii('{'):
             this. context.push(contexts.b_stat)
             break;
-          case 62: // >
-          case 41: // )
-          case 93: // ]
-          case 125: // }
+          case ascii('>'):
+          case ascii(')'):
+          case ascii(']'):
+          case ascii('}'):
             this.context.pop()
             break;
         }
         code = this.input.charCodeAt(++this.pos);
       }
 
-      if (code === 59) { // ;
+      if (code === ascii(';')) {
         this.pos++
       }
       this.next()
@@ -204,4 +203,8 @@ function plugin(parser) {
       return this.input.slice(this.pos, this.input.indexOf(" ", this.pos))
     }
   }
+}
+
+function ascii(character) {
+  return character.charCodeAt(0)
 }
