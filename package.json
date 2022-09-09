@@ -5,10 +5,10 @@
   "description": "",
   "main": "./src/index.js",
   "scripts": {
-    "pretest": "prettier . --write && eslint .",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:debug": "node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --watch --runInBand"
+    "test": "npm run jest && prettier . --write && eslint .",
+    "jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "jest:debug": "node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "jest:watch": "node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --watch --runInBand"
   },
   "author": "",
   "license": "ISC",

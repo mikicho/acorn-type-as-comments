@@ -1,4 +1,4 @@
-import {Parser, TokContext, isIdentifierStart} from 'acorn'
+import {Parser, TokContext} from 'acorn'
 
 export default function (_options = {}) {
   return plugin
@@ -24,7 +24,7 @@ function plugin(parser) {
         this.skipSpace()
         const nextWord = this.peekWord()
         if (['type', 'interface'].includes(nextWord)) {
-          this.skipTypeAlias()
+          this.skipType([])
           return
         }
       } else if (word === 'import') {
@@ -35,11 +35,8 @@ function plugin(parser) {
           this.next()
           return
         }
-      } else if (
-        (['type', 'interface'].includes(word) && this.skipSpace(),
-        isIdentifierStart(this.fullCharCodeAtPos()))
-      ) {
-        this.skipTypeAlias()
+      } else if (['type', 'interface'].includes(word)) {
+        this.skipType([])
         return
       }
 
@@ -53,7 +50,7 @@ function plugin(parser) {
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom()
       if (this.type === tt.colon) {
-        this.skipType()
+        this.skipType([ascii(')'), ascii(','), ascii(';'), ascii('='), ascii('>'), ascii('}')])
       }
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) {
         return left
@@ -64,13 +61,14 @@ function plugin(parser) {
       return this.finishNode(node, 'AssignmentPattern')
     }
 
-    skipType() {
+    skipType(stopCharacters) {
+      const finalStopCharacters = [...stopCharacters, ascii(';'), ascii('\n')]
+
       let code = this.input.charCodeAt(this.pos)
       const contextsCount = this.context.length
 
-      loop: while (
-        (![ascii(')'), ascii(','), ascii(';'), ascii('='), ascii('>'), ascii('}')].includes(code) ||
-          contextsCount < this.context.length) &&
+      while (
+        (!finalStopCharacters.includes(code) || contextsCount < this.context.length) &&
         this.pos < this.input.length
       ) {
         switch (code) {
@@ -91,11 +89,6 @@ function plugin(parser) {
           case ascii(']'):
           case ascii('}'):
             this.context.pop()
-
-            if (contextsCount === this.context.length) {
-              this.pos++
-              break loop
-            }
             break
         }
         code = this.input.charCodeAt(++this.pos)
@@ -115,7 +108,7 @@ function plugin(parser) {
         let decl = this.startNode()
         this.parseVarId(decl, kind)
         if (this.type === tt.colon) {
-          this.skipType()
+          this.skipType([ascii(')'), ascii(','), ascii('='), ascii('>'), ascii('}')])
         }
         if (this.eat(tt.eq)) {
           decl.init = this.parseMaybeAssign(isFor)
@@ -136,41 +129,6 @@ function plugin(parser) {
         if (!this.eat(tt.comma)) break
       }
       return node
-    }
-
-    skipTypeAlias() {
-      this.pos = this.input.indexOf('{', this.pos) + 1
-      let code = this.input.charCodeAt(this.pos)
-      const contextsCount = this.context.length
-      this.context.push(contexts.b_stat)
-      while (contextsCount < this.context.length && this.pos < this.input.length) {
-        switch (code) {
-          case ascii('<'):
-            this.context.push(contexts.a_stat)
-            break
-          case ascii('('):
-            this.context.push(contexts.p_stat)
-            break
-          case ascii('['):
-            this.context.push(contexts.s_stat)
-            break
-          case ascii('{'):
-            this.context.push(contexts.b_stat)
-            break
-          case ascii('>'):
-          case ascii(')'):
-          case ascii(']'):
-          case ascii('}'):
-            this.context.pop()
-            break
-        }
-        code = this.input.charCodeAt(++this.pos)
-      }
-
-      if (code === ascii(';')) {
-        this.pos++
-      }
-      this.next()
     }
 
     parseClassId(node, isStatement) {
@@ -201,7 +159,7 @@ function plugin(parser) {
 
     parseClassField(field) {
       if (this.type === tt.colon) {
-        this.skipType()
+        this.skipType([ascii(')'), ascii(','), ascii(';'), ascii('='), ascii('>'), ascii('}')])
       }
       super.parseClassField(field)
     }
@@ -210,7 +168,7 @@ function plugin(parser) {
       super.parseFunctionParams(node)
 
       if (this.type === tt.colon) {
-        this.skipType()
+        this.skipType([ascii('{')])
       }
     }
 
@@ -220,6 +178,7 @@ function plugin(parser) {
   }
 }
 
+/**@param {string} character */
 function ascii(character) {
   return character.charCodeAt(0)
 }
