@@ -49,7 +49,7 @@ function plugin(parser) {
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom()
       if (this.type === tt.colon) {
-        this.skipType([ascii(')'), ascii(','), ascii('=')])
+        this.skipType([')', ',', '='])
       }
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) {
         return left
@@ -61,7 +61,7 @@ function plugin(parser) {
     }
 
     skipType(stopCharacters) {
-      const finalStopCharacters = [...stopCharacters, ascii(';'), ascii('\n')]
+      const finalStopCharacters = [...stopCharacters, ';', '\n']
       const contextsCount = this.context.length
 
       for (
@@ -71,22 +71,22 @@ function plugin(parser) {
         char = this.input[++this.pos]
       ) {
         switch (char) {
-          case ascii('<'):
+          case '<':
             this.context.push(contexts.a_stat)
             break
-          case ascii('('):
+          case '(':
             this.context.push(contexts.p_stat)
             break
-          case ascii('['):
+          case '[':
             this.context.push(contexts.s_stat)
             break
-          case ascii('{'):
+          case '{':
             this.context.push(contexts.b_stat)
             break
-          case ascii('>'):
-          case ascii(')'):
-          case ascii(']'):
-          case ascii('}'):
+          case '>':
+          case ')':
+          case ']':
+          case '}':
             this.context.pop()
             break
         }
@@ -106,7 +106,7 @@ function plugin(parser) {
         let decl = this.startNode()
         this.parseVarId(decl, kind)
         if (this.type === tt.colon) {
-          this.skipType([ascii(')'), ascii(','), ascii('=')])
+          this.skipType([')', ',', '='])
         }
         if (this.eat(tt.eq)) {
           decl.init = this.parseMaybeAssign(isFor)
@@ -157,7 +157,7 @@ function plugin(parser) {
 
     parseClassField(field) {
       if (this.type === tt.colon) {
-        this.skipType([ascii(','), ascii(';'), ascii('='), ascii('}')])
+        this.skipType([',', ';', '=', '}'])
       }
       super.parseClassField(field)
     }
@@ -166,7 +166,7 @@ function plugin(parser) {
       super.parseFunctionParams(node)
 
       if (this.type === tt.colon) {
-        this.skipType([ascii('{')])
+        this.skipType(['{'])
       }
     }
 
@@ -174,9 +174,4 @@ function plugin(parser) {
       return this.input.slice(this.pos, this.input.indexOf(' ', this.pos))
     }
   }
-}
-
-/**@param {string} character */
-function ascii(character) {
-  return character
 }
