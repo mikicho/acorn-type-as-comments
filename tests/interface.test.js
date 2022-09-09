@@ -10,9 +10,9 @@ const options = {
 
 describe.only('interface', () => {
   it.each([
-    // ['a = 1; interface User { name: string }', 'a = 1;'],
+    ['a = 1; interface User { name: string }', 'a = 1;'],
     ['interface Pair<T, U> = { l: T; r: U }', ''],
-    // ['export interface Pair<T, U> = { l: T, r: U }', ''],
+    ['export interface Pair<T, U> = { l: T, r: U }', ''],
     // ['interface Pair<T or ddd<d>, U  or this!<[]>> = { l: T, r: U }; a = 1', 'a = 1;'],
     // ['export interface Pair<T, U> = { l: T, r: U }; a = 1', 'a = 1;'],
   ])('should parse: %s', (source, expected) => {

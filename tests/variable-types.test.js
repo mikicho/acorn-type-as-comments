@@ -11,7 +11,7 @@ const options = {
 describe('Variable type', () => {
   it.each([
     ['let coord', 'let coord;'],
-    // ['let coord: string\nlet y = 4', 'let coord;\nlet y = 4;'], // TODO The problem is ASI in the first line
+    ['let coord: string\nlet y = 4', 'let coord;\nlet y = 4;'], // TODO The problem is ASI in the first line
     ['const coord = 5', 'const coord = 5;'],
     ['let coord: Pair<number>', 'let coord;'],
     ['let coord: Pair<number>', 'let coord;'],
