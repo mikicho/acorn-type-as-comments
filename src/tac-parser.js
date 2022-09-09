@@ -55,7 +55,7 @@ function plugin(parser) {
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) {
         return left
       }
-      var node = this.startNodeAt(startPos, startLoc)
+      const node = this.startNodeAt(startPos, startLoc)
       node.left = left
       node.right = this.parseMaybeAssign()
       return this.finishNode(node, 'AssignmentPattern')
@@ -63,15 +63,15 @@ function plugin(parser) {
 
     skipType(stopCharacters) {
       const finalStopCharacters = [...stopCharacters, ascii(';'), ascii('\n')]
-
-      let code = this.input.charCodeAt(this.pos)
       const contextsCount = this.context.length
 
-      while (
-        (!finalStopCharacters.includes(code) || contextsCount < this.context.length) &&
-        this.pos < this.input.length
+      for (
+        let char = this.input[this.pos];
+        (!finalStopCharacters.includes(char) || contextsCount < this.context.length) &&
+        this.pos < this.input.length;
+        char = this.input[++this.pos]
       ) {
-        switch (code) {
+        switch (char) {
           case ascii('<'):
             this.context.push(contexts.a_stat)
             break
@@ -91,7 +91,6 @@ function plugin(parser) {
             this.context.pop()
             break
         }
-        code = this.input.charCodeAt(++this.pos)
       }
 
       if (contextsCount > this.context.length) {
@@ -180,5 +179,5 @@ function plugin(parser) {
 
 /**@param {string} character */
 function ascii(character) {
-  return character.charCodeAt(0)
+  return character
 }
