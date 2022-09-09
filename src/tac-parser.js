@@ -1,6 +1,6 @@
 import {Parser, TokContext, isIdentifierStart} from 'acorn'
 
-export default function (options = {}) {
+export default function (_options = {}) {
   return plugin
 }
 
@@ -53,7 +53,7 @@ function plugin(parser) {
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom()
       if (this.type === tt.colon) {
-        this.skipParameterType()
+        this.skipType()
       }
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) {
         return left
@@ -64,7 +64,7 @@ function plugin(parser) {
       return this.finishNode(node, 'AssignmentPattern')
     }
 
-    skipParameterType() {
+    skipType() {
       let code = this.input.charCodeAt(this.pos)
       const contextsCount = this.context.length
 
@@ -115,7 +115,7 @@ function plugin(parser) {
         let decl = this.startNode()
         this.parseVarId(decl, kind)
         if (this.type === tt.colon) {
-          this.skipParameterType()
+          this.skipType()
         }
         if (this.eat(tt.eq)) {
           decl.init = this.parseMaybeAssign(isFor)
@@ -189,6 +189,7 @@ function plugin(parser) {
         switch (code) {
           case 60: // <
             this.context.push(contexts.a_stat)
+            break
           case 62: // >
             this.context.pop()
             break
@@ -200,7 +201,7 @@ function plugin(parser) {
 
     parseClassField(field) {
       if (this.type === tt.colon) {
-        this.skipParameterType()
+        this.skipType()
       }
       super.parseClassField(field)
     }
@@ -209,7 +210,7 @@ function plugin(parser) {
       super.parseFunctionParams(node)
 
       if (this.type === tt.colon) {
-        this.skipParameterType()
+        this.skipType()
       }
     }
 
