@@ -1,8 +1,5 @@
 import {Parser, TokContext} from 'acorn'
 
-const FUNC_STATEMENT = 1,
-  FUNC_HANGING_STATEMENT = 2 // copied from acorn
-
 export default function (_options = {}) {
   return plugin
 }
@@ -70,20 +67,23 @@ function plugin(parser) {
       return this.finishNode(node, 'AssignmentPattern')
     }
 
-    skipType(stopCharacters, {ignoreFirstBraces = false} = {}) {
+    skipType(stopCharacters, {ignoreFirstBraces = false, startsWith = undefined} = {}) {
       const finalStopCharacters = [...stopCharacters, ';', '\n']
       const contextsCount = this.context.length
+      const startedWith = startsWith
 
       const foundStopCharacter = (char) =>
         finalStopCharacters.includes(char) && (!ignoreFirstBraces || char !== '{')
 
       this.skipSpace()
 
-      for (
-        let char = this.input[this.pos];
+      loop: for (
+        let char = startsWith || this.input[this.pos];
         (!foundStopCharacter(char) || contextsCount < this.context.length) &&
         this.pos < this.input.length;
-        char = this.input[++this.pos], ignoreFirstBraces = false
+        char = this.input[startsWith ? this.pos : ++this.pos],
+          ignoreFirstBraces = false,
+          startsWith = undefined
       ) {
         switch (char) {
           case '<':
@@ -99,6 +99,12 @@ function plugin(parser) {
             this.context.push(contexts.b_stat)
             break
           case '>':
+            this.context.pop()
+            if (startedWith === '<' && contextsCount === this.context.length) {
+              ++this.pos
+              break loop
+            }
+            break
           case ')':
           case ']':
             this.context.pop()
@@ -147,27 +153,11 @@ function plugin(parser) {
     parseClassId(node, isStatement) {
       super.parseClassId(node, isStatement)
 
-      if (this.eat(tt.relational)) {
-        this.parseClassGeneric()
+      // hack. We should have a token AngleBracketLt (or any other bracket?) TODO
+      if (this.type === tt.relational) {
+        this.skipType([], {startsWith: '<'})
+        this.next()
       }
-    }
-
-    parseClassGeneric() {
-      let code = this.value[0]
-      const contextsCount = this.context.length
-      this.context.push(contexts.a_stat)
-      while (contextsCount < this.context.length && this.pos < this.input.length) {
-        switch (code) {
-          case 60: // <
-            this.context.push(contexts.a_stat)
-            break
-          case 62: // >
-            this.context.pop()
-            break
-        }
-        code = this.input.charCodeAt(++this.pos)
-      }
-      this.next()
     }
 
     parseClassField(field) {
@@ -178,18 +168,12 @@ function plugin(parser) {
       super.parseClassField(field)
     }
 
-    parseFunctionStatement(node, isAsync, declarationPosition) {
-      this.next()
-      this.skipType(['('])
-      return this.parseFunction(
-        node,
-        FUNC_STATEMENT | (declarationPosition ? 0 : FUNC_HANGING_STATEMENT),
-        false,
-        isAsync,
-      )
-    }
-
     parseFunctionParams(node) {
+      // hack. We should have a token AngleBracketLt (or any other bracket?) TODO
+      if (this.type === tt.relational) {
+        this.skipType([], {startsWith: '<'})
+        this.next()
+      }
       super.parseFunctionParams(node)
 
       if (this.type === tt.colon) {
