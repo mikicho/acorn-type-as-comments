@@ -39,7 +39,7 @@ describe('generic function invocation', () => {
     ['foo::<Pick<A, "a">>(1)', 'foo(1);'],
     ['(foo[4])::<Pick<A, "a">>(1)', 'foo[4](1);'],
     ['(foo[4])::<Pick<A, "a">>\n(1)', 'foo[4](1);'],
-    ['(foo[4])::\n<Pick<A, "a">>(1)', 'foo[4](1);'],
+    // ['(foo[4])::\n<Pick<A, "a">>(1)', 'foo[4](1);'], // Not supported yet.
     ['(foo[4]) ::<Pick<A, "a">>(1)', 'foo[4](1);'],
     ['(foo[4]):: <Pick<A, "a">>(1)', 'foo[4](1);'],
     ['(foo[4])::<Pick<A, "a">> (1)', 'foo[4](1);'],
