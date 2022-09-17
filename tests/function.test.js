@@ -8,7 +8,7 @@ const options = {
   sourceType: 'module',
 }
 
-describe('Function', () => {
+describe('Function declaration', () => {
   it.each([
     ['function a(arg) {}', 'function a(arg) {\n}'],
     ['function a(arg = 5) {}', 'function a(arg = 5) {\n}'],
@@ -27,6 +27,16 @@ describe('Function', () => {
     ['function a(): string {}', 'function a() {\n}'],
     ['function a(x?: optional-type) {}', 'function a(x) {\n}'],
     ['function abc<sdjkfhaskdjfh>(x: string) {}', 'function abc(x) {\n}'],
+  ])('should parse: %s', (source, expected) => {
+    const ast = parser.parse(source, options)
+    expect(generate(ast)).toBe(expected)
+  })
+})
+
+describe('Call generic function', () => {
+  it.each([
+    ['foo::<number>(1)', 'foo(1);'],
+    ['foo::<Pick<A, "a">>(1)', 'foo(1);'],
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)
     expect(generate(ast)).toBe(expected)

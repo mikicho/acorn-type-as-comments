@@ -49,6 +49,15 @@ function plugin(parser) {
       return this.finishToken(type, word)
     }
 
+    parseIdent(liberal, isBinding) {
+      const node = super.parseIdent(liberal, isBinding)
+      if (this.type === tt.colon && this.input[this.pos] === ':') {
+        this.skipType(['('])
+        this.next()
+      }
+      return node
+    }
+
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom()
       if (this.type === tt.question) {
