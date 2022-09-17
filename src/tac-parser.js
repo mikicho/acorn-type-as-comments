@@ -1,5 +1,8 @@
 import {Parser, TokContext} from 'acorn'
 
+const FUNC_STATEMENT = 1,
+  FUNC_HANGING_STATEMENT = 2 // copied from acorn
+
 export default function (_options = {}) {
   return plugin
 }
@@ -26,6 +29,7 @@ function plugin(parser) {
 
         if (['type', 'interface'].includes(nextWord)) {
           this.skipType([])
+          this.next()
           return
         }
       } else if (word === 'import') {
@@ -38,6 +42,8 @@ function plugin(parser) {
         }
       } else if (['type', 'interface'].includes(word)) {
         this.skipType([])
+        this.next()
+
         return
       }
 
@@ -53,6 +59,7 @@ function plugin(parser) {
       }
       if (this.type === tt.colon) {
         this.skipType([')', ',', '='])
+        this.next()
       }
       if (this.options.ecmaVersion < 6 || !this.eat(tt.eq)) {
         return left
@@ -104,8 +111,6 @@ function plugin(parser) {
       if (contextsCount > this.context.length) {
         this.unexpected()
       }
-
-      this.next()
     }
 
     parseVar(node, isFor, kind) {
@@ -116,6 +121,7 @@ function plugin(parser) {
         this.parseVarId(decl, kind)
         if (this.type === tt.colon) {
           this.skipType([')', ',', '='])
+          this.next()
         }
         if (this.eat(tt.eq)) {
           decl.init = this.parseMaybeAssign(isFor)
@@ -167,8 +173,20 @@ function plugin(parser) {
     parseClassField(field) {
       if (this.type === tt.colon) {
         this.skipType([',', ';', '=', '}'])
+        this.next()
       }
       super.parseClassField(field)
+    }
+
+    parseFunctionStatement(node, isAsync, declarationPosition) {
+      this.next()
+      this.skipType(['('])
+      return this.parseFunction(
+        node,
+        FUNC_STATEMENT | (declarationPosition ? 0 : FUNC_HANGING_STATEMENT),
+        false,
+        isAsync,
+      )
     }
 
     parseFunctionParams(node) {
@@ -176,6 +194,7 @@ function plugin(parser) {
 
       if (this.type === tt.colon) {
         this.skipType(['{'], {ignoreFirstBraces: true})
+        this.next()
       }
     }
 

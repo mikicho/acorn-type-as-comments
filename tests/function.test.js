@@ -26,7 +26,7 @@ describe('Function', () => {
     ['function a(arg: string = 5, arg1): {a: string} {}', 'function a(arg = 5, arg1) {\n}'],
     ['function a(): string {}', 'function a() {\n}'],
     ['function a(x?: optional-type) {}', 'function a(x) {\n}'],
-    // ['function a<T>() {}', 'function a(x) {\n}'], // TODO generics
+    ['function abc<sdjkfhaskdjfh>(x: string) {}', 'function abc(x) {\n}'],
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)
     expect(generate(ast)).toBe(expected)
