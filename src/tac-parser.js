@@ -1,5 +1,8 @@
 import {Parser, TokContext} from 'acorn'
 
+// Let- or const-style binding
+const BIND_LEXICAL = 2
+
 export default function (_options = {}) {
   return plugin
 }
@@ -33,11 +36,12 @@ function plugin(parser) {
         this.skipSpace()
         if (this.peekWord() === 'type') {
           // TODO: parse the statement instead of ignore it completely
-          this.skipLineComment(0)
+          this.skipType([])
           this.next()
+          this.semicolon()
           return
         }
-      } else if (['type', 'interface'].includes(word)) {
+      } else if (['type', 'interface'].includes(word) && this.context.length === 1) {
         this.skipType([])
         this.next()
 
@@ -51,6 +55,7 @@ function plugin(parser) {
 
     parseExprAtom(refDestructuringErrors, forInit) {
       const expr = super.parseExprAtom(refDestructuringErrors, forInit)
+      // hack. We should have a double-colon token or something TODO
       if (this.type === tt.colon && this.input[this.pos] === ':') {
         this.skipType(['('])
         this.next()
@@ -157,6 +162,55 @@ function plugin(parser) {
         if (!this.eat(tt.comma)) break
       }
       return node
+    }
+
+    // Parses a comma-separated list of module imports.
+    parseImportSpecifiers() {
+      let nodes = [],
+        first = true
+      if (this.type === tt.name) {
+        // import defaultObj, { x, y as z } from '...'
+        let node = this.startNode()
+        node.local = this.parseIdent()
+        this.checkLValSimple(node.local, BIND_LEXICAL)
+        nodes.push(this.finishNode(node, 'ImportDefaultSpecifier'))
+        if (!this.eat(tt.comma)) return nodes
+      }
+      if (this.type === tt.star) {
+        let node = this.startNode()
+        this.next()
+        this.expectContextual('as')
+        node.local = this.parseIdent()
+        this.checkLValSimple(node.local, BIND_LEXICAL)
+        nodes.push(this.finishNode(node, 'ImportNamespaceSpecifier'))
+        return nodes
+      }
+      this.expect(tt.braceL)
+      while (!this.eat(tt.braceR)) {
+        if (!first) {
+          this.expect(tt.comma)
+          if (this.afterTrailingComma(tt.braceR)) break
+        } else first = false
+
+        let node = this.startNode()
+        node.imported = this.parseModuleExportName()
+        if (this.eatContextual('as')) {
+          node.local = this.parseIdent()
+        } else {
+          this.checkUnreserved(node.imported)
+          node.local = node.imported
+        }
+        this.checkLValSimple(node.local, BIND_LEXICAL)
+
+        // Skip import { type Pair }
+        if (node.imported.name === 'type' && this.type === tt.name) {
+          this.skipType([',', '}'])
+          this.next()
+        } else {
+          nodes.push(this.finishNode(node, 'ImportSpecifier'))
+        }
+      }
+      return nodes
     }
 
     parseClassId(node, isStatement) {
