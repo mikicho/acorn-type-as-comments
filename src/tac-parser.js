@@ -48,6 +48,9 @@ function plugin(parser) {
 
     parseMaybeDefault(startPos, startLoc, left) {
       left = left || this.parseBindingAtom()
+      if (this.type === tt.question) {
+        this.eat(tt.question)
+      }
       if (this.type === tt.colon) {
         this.skipType([')', ',', '='])
       }
