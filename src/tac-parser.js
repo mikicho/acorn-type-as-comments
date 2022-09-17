@@ -65,26 +65,25 @@ function plugin(parser) {
       const contextsCount = this.context.length
 
       const foundStopCharacter = (char) =>
-        finalStopCharacters.includes(char) && (!ignoreFirstBraces || char === '}')
+        finalStopCharacters.includes(char) && (!ignoreFirstBraces || char !== '{')
 
-      loop: for (
+      this.skipSpace()
+
+      for (
         let char = this.input[this.pos];
         (!foundStopCharacter(char) || contextsCount < this.context.length) &&
         this.pos < this.input.length;
-        char = this.input[++this.pos]
+        char = this.input[++this.pos], ignoreFirstBraces = false
       ) {
         switch (char) {
           case '<':
             this.context.push(contexts.a_stat)
-            ignoreFirstBraces = false
             break
           case '(':
             this.context.push(contexts.p_stat)
-            ignoreFirstBraces = false
             break
           case '[':
             this.context.push(contexts.s_stat)
-            ignoreFirstBraces = false
             break
           case '{':
             this.context.push(contexts.b_stat)
@@ -96,10 +95,6 @@ function plugin(parser) {
             break
           case '}':
             this.context.pop()
-            if (ignoreFirstBraces && contextsCount === this.context.length) {
-              this.pos++
-              break loop
-            }
         }
       }
 

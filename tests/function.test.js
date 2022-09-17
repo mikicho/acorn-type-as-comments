@@ -22,9 +22,9 @@ describe('Function', () => {
       'function a(arg: string = 5, arg1): Pick<{a: string}, "a"> {}',
       'function a(arg = 5, arg1) {\n}',
     ],
-    ['function a(arg: string = 5, arg1): {a: string} {}', 'function a(arg = 5, arg1) {\n}'],
     ['export function a() {}', 'export function a() {\n}'],
-    // ['function a(): string {}', 'function a() {\n}'], // TODO function simple return type
+    ['function a(arg: string = 5, arg1): {a: string} {}', 'function a(arg = 5, arg1) {\n}'],
+    ['function a(): string {}', 'function a() {\n}'],
     // ['function a(x?: optional-type) {}', 'function a(x) {\n}'], // TODO optional parameters
     // ['function a<T>() {}', 'function a(x) {\n}'], // TODO generics
   ])('should parse: %s', (source, expected) => {
