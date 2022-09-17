@@ -49,13 +49,13 @@ function plugin(parser) {
       return this.finishToken(type, word)
     }
 
-    parseIdent(liberal, isBinding) {
-      const node = super.parseIdent(liberal, isBinding)
+    parseExprAtom(refDestructuringErrors, forInit) {
+      const expr = super.parseExprAtom(refDestructuringErrors, forInit)
       if (this.type === tt.colon && this.input[this.pos] === ':') {
         this.skipType(['('])
         this.next()
       }
-      return node
+      return expr
     }
 
     parseMaybeDefault(startPos, startLoc, left) {
