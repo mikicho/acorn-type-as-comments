@@ -14,6 +14,7 @@ describe('import', () => {
     ['import type { Pair } from "./a.js"\na = 1', 'a = 1;'],
     ['import type * as schema from "schema";a = 1', 'a = 1;'],
     ['import { type Pair } from "./a.js"\na = 1', "import './a.js';\na = 1;"],
+    ['import { type } from "./a.js"', "import { type } from './a.js';"],
     [
       'import { type Pair, nextToken } from "./a.js"\na = 1',
       "import { nextToken } from './a.js';\na = 1;",
