@@ -8,10 +8,17 @@ const options = {
   sourceType: 'module',
 }
 
-describe.skip('type-assertions', () => {
+describe('type-assertions', () => {
   it.each([
-    // ['a = 1 as number', 'a = 1'] // TODO not supported yet
-    // ['x!.a', 'x.a'] // TODO not supported yet
+    ['a = 1 as number', 'a = 1;\n'],
+    ['a = 1 as number, b = 1 as number', '(a = 1, b = 1);\n'],
+    ['function a() { return result as const }', 'function a() {\n  return result;\n}\n'],
+    [
+      'a*(4 as string<foo***>) + foo((78 * 7) as lsjdfskhdf) + as as as, b ? b?c:4 as zoo[::::] : la',
+      '(a * 4 + foo(78 * 7) + as, b ? b ? c : 4 : la);\n',
+    ],
+    ['(pet as Fish).swim', 'pet.swim;\n'],
+    // ['x!.a', 'x.a'], // TODO not supported yet
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)
     expect(toJs(ast).value).toBe(expected)

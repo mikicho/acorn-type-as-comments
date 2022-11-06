@@ -53,6 +53,15 @@ function plugin(parser) {
       return this.finishToken(type, word)
     }
 
+    parseMaybeAssign(forInit, refDestructuringErrors) {
+      const expr = super.parseMaybeAssign(forInit, refDestructuringErrors)
+      if (this.type === tt.name && this.value === 'as') {
+        this.skipType([',', '}', ':', ')'])
+        this.next()
+      }
+      return expr
+    }
+
     parseExprAtom(refDestructuringErrors, forInit) {
       const expr = super.parseExprAtom(refDestructuringErrors, forInit)
       // hack. We should have a double-colon token or something TODO
