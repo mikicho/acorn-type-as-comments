@@ -8,13 +8,10 @@ const options = {
   sourceType: 'module',
 }
 
-describe.only('interface', () => {
+describe('FunctionRestParameter', () => {
   it.each([
-    ['a = 1; interface User { name: string }', 'a = 1;'],
-    ['interface Pair<T, U> = { l: T; r: U }', ''],
-    ['export interface Pair<T, U> = { l: T, r: U }', ''],
-    ['interface Pair<T or ddd<d>, U  or this!<[]>> = { l: T, r: U }; a = 1', ';\na = 1;'],
-    ['export interface Pair<T, U> = { l: T, r: U }; a = 1', ';\na = 1;'],
+    ['function a(...rest: string[]) {}', 'function a(...rest) {\n}'],
+    ['function a(...{a}: { a: string }[]) {}', 'function a(...{a}) {\n}'],
   ])('should parse: %s', (source, expected) => {
     const ast = parser.parse(source, options)
     expect(generate(ast)).toBe(expected)

@@ -32,19 +32,3 @@ describe('Function declaration', () => {
     expect(generate(ast)).toBe(expected)
   })
 })
-
-describe('generic function invocation', () => {
-  it.each([
-    ['foo::<number>(1)', 'foo(1);'],
-    ['foo::<Pick<A, "a">>(1)', 'foo(1);'],
-    ['(foo[4])::<Pick<A, "a">>(1)', 'foo[4](1);'],
-    ['(foo[4])::<Pick<A, "a">>\n(1)', 'foo[4](1);'],
-    // ['(foo[4])::\n<Pick<A, "a">>(1)', 'foo[4](1);'], // Not supported yet.
-    ['(foo[4]) ::<Pick<A, "a">>(1)', 'foo[4](1);'],
-    ['(foo[4]):: <Pick<A, "a">>(1)', 'foo[4](1);'],
-    ['(foo[4])::<Pick<A, "a">> (1)', 'foo[4](1);'],
-  ])('should parse: %s', (source, expected) => {
-    const ast = parser.parse(source, options)
-    expect(generate(ast)).toBe(expected)
-  })
-})

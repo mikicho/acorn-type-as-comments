@@ -63,13 +63,33 @@ function plugin(parser) {
     }
 
     parseExprAtom(refDestructuringErrors, forInit) {
+      if (this.type === tt.name && this.input[this.pos] === '!') {
+        this.pos++
+      }
+
       const expr = super.parseExprAtom(refDestructuringErrors, forInit)
       // hack. We should have a double-colon token or something TODO
+      if (this.type === tt.colon && this.input[this.pos] === ':') {
+        this.skipType(['(', '.', '='])
+        this.next()
+      }
+      return expr
+    }
+
+    parseSubscript(base, startPos, startLoc, noCalls, maybeAsyncArrow, optionalChained, forInit) {
       if (this.type === tt.colon && this.input[this.pos] === ':') {
         this.skipType(['('])
         this.next()
       }
-      return expr
+      return super.parseSubscript(
+        base,
+        startPos,
+        startLoc,
+        noCalls,
+        maybeAsyncArrow,
+        optionalChained,
+        forInit,
+      )
     }
 
     parseMaybeDefault(startPos, startLoc, left) {
@@ -252,6 +272,16 @@ function plugin(parser) {
         this.skipType(['{'], {ignoreFirstBraces: true})
         this.next()
       }
+    }
+
+    parseRestBinding() {
+      const rest = super.parseRestBinding()
+      if (this.type === tt.colon) {
+        this.skipType([')'])
+        this.next()
+      }
+
+      return rest
     }
 
     peekWord() {
